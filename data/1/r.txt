@@ -1,1 +1,1 @@
-{:maquina 1, :ganancia 13, :resultados ((0 1 "Dinero no suficiente" B 0 0 (5 2)) (1 2 "Venta exitosa" C 13 15 (2)) (0 3 "Se ingresó una moneda no válida" E 0 0 (5 5 5 3))), :alertas-prod-min nil, :alertas-mon-min nil, :alertas-mon-max nil}
+{:maquina 1, :ganancia 13, :resultados ((0 1 "Dinero no suficiente" B 0 0 (5 2)) (1 2 "Venta exitosa" C 13 15 (2)) (0 3 "Se ingresó una moneda no válida" E 0 0 (5 5 5 3))), :alertas-prod-min (C), :alertas-mon-min nil, :alertas-mon-max (5)}

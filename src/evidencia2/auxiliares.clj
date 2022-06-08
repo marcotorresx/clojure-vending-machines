@@ -26,6 +26,7 @@
 ;; --- GENERAR TRANSACCIÓN ---
 ;; Función que genera una transacción con datos random
 ;; (transacción actual) -> (transacción)
+
 (defn generar-transaccion [actual] 
   [; Id de transacción
    actual 
@@ -37,7 +38,7 @@
 
 
 ;; --- GENERAR TRANSACCIONES ---
-;; Función que genera transacciones con valores random
+;; Función que genera n transacciones con valores random
 ;; (cantidad de transacciones, máquina actual, transacciones, transacción actual) -> (mapa con transacciones)
 
 (defn generar-transacciones [nTransacciones maquina transacciones actual]
@@ -48,8 +49,8 @@
 
 
 ;; --- GENERAR MÁQUINAS ---
-;; Función que llama a la función para generar los archivos de las máquinas
-;; (cantidad de máquinas, cantidad de transacciones por máquina) -> nil
+;; Función que generar los archivos de las máquinas
+;; (cantidad de máquinas, cantidad de transacciones por máquina, máquina actual) -> nil
 
 (defn generar-maquinas [nMaquinas nTransacciones actual]
   (if (= actual nMaquinas) nil
@@ -66,7 +67,7 @@
 
 ;; --- PRINT RESULTADO ---
 ;; Función que imprime el resultado de una transacción
-;; (estado de transacción, id transacción, mensaje, producto, precio, cant ingresada, monedas) -> (void)
+;; (resultado de transacción) -> nil
 
 (defn print-resultado [res]
   ; Si el estado es 1 la transacción fue exitosa
@@ -79,6 +80,9 @@
 
 
 ;; --- IMPRIMIR RESULTADOS DE MÁQUINA ---
+;; Función que imprime los resultados de una máquina
+;; (numero de máquina, ganancia, resultados, alertas) -> nil
+
 (defn imprimir-resultados-maquina [n-maquina ganancia resultados alertas-prod-min alertas-mon-min alertas-mon-max]
   (println "\n\n--------- RESULTADOS MÁQUINA" n-maquina "---------")
   (dorun (map print-resultado resultados))
@@ -88,22 +92,76 @@
   (println "Monedas con mucho inventario: " alertas-mon-max))
 
 
+;; --- BUSCAR LUGAR DEL TOP ---
+;; Función que regresa el nuevo top acomodando la nueva máquina en su lugar
+(defn buscar-lugar [n-maquina ganancia pasados top-10]
+  (println pasados)
+  (if
+   ; Si la máquina actual es más grande que el first y second del top-10
+   (and (> ganancia (second (first top-10))) (> ganancia (second (second top-10))))
+    (if
+     ; Y si solo habían dos elementos es porque la actual es la máquina más grande y va al final 
+     (= (count top-10) 2)
+      ; Agregar máquina al final del top
+      (concat
+       ; Quitar el primer y segundo elemento a los pasados y quitar el primero de pasados porque es el más pequeño
+       (drop 1 (concat pasados (list (first top-10)) (list (second top-10))))
+       ; Añadir la máquina actual que es ahora la más grande
+       (list (list n-maquina ganancia)))
+      ; Pasar a la siguiente iteración
+      (buscar-lugar n-maquina ganancia (concat pasados (list (first top-10))) (rest top-10)))
+
+   ; Si no es porque es más grande que el primero pero más chico que el segundo y este es su lugar
+   (concat
+    ; Quitar el primer elemento del top anterior porque es el más pequeño
+    (drop 1 (concat pasados (list (first top-10))))
+     ; Añadir la máquina actual
+    (list (list n-maquina ganancia))
+     ; El resto del top
+    (rest top-10))))
+
+
+;; --- CHECAR TOP 10 ---
+;; Función que checa si una máquina entra en el top 10 de máquinas con mayor ganancia
+;; (número de máquina, ganancia de la máquina, actual top 10)
+
+(defn checar-top [n-maquina ganancia top-10]
+  (if
+   ; Si todavía no hay 10 elementos dentro
+   (< (count top-10) 10)
+    ; Agrega la máquina actual en donde va
+    (concat (filter (fn [par] (<= (second par) ganancia)) top-10) 
+            (list (list n-maquina ganancia)) 
+            (filter (fn [par] (> (second par) ganancia)) top-10))
+
+    ; Si ya hay 10 elementos
+    (if
+     ; Si la ganancia actual es más chica que la ganancia más pequeña del top regresa el top como estaba
+     (<= ganancia (second (first top-10))) top-10
+     ; Si es más grande significa que debe de entrar en el top y hay que buscar su lugar
+     (buscar-lugar n-maquina ganancia '() top-10))))
+
+
 ;; --- MOSTRAR RESULTADOS GENERALES ---
-(defn resultados-generales [n-maquinas actual ganancia alertas-prod-min alertas-mon-min alertas-mon-max]
-  (if (= n-maquinas actual) (list ganancia alertas-prod-min alertas-mon-min alertas-mon-max)
+;; Función que muestra los resultados generales de todas las máquinas procesadas
+;; (numero de maquinas, máquina actual, ganancia total, alertas) -> nil
+
+(defn resultados-generales [n-maquinas actual ganancia top-10 alertas-prod-min alertas-mon-min alertas-mon-max]
+  (if (= n-maquinas actual) (list ganancia alertas-prod-min alertas-mon-min alertas-mon-max top-10)
       ; Leer resultados de máquina acutal
       (let [res (read-string (slurp (str "data/" actual "/r.txt")))]
         ; Imprimir resultados de la máquina actual
         (imprimir-resultados-maquina actual (get res :ganancia) (get res :resultados)
                                      (get res :alertas-prod-min) (get res :alertas-mon-min)
                                      (get res :alertas-mon-max))
-        ; Checar si es top 10
         ; Pasar a la siguiente máquina
-        (resultados-generales n-maquinas 
+        (resultados-generales n-maquinas
                               ; Pasar a siguiente máquina
-                              (inc actual) 
+                              (inc actual)
                               ; Sumar la ganancia actual
                               (+ ganancia (get res :ganancia))
+                              ; Checar si es top 10
+                              (checar-top actual (get res :ganancia) top-10)
                               ; Si hay alertas de poco producto añadir máquina
                               (if (= (get res :alertas-prod-min) nil) alertas-prod-min (concat alertas-prod-min (list actual)))
                               ; Si hay alertas de pocas monedas añadir máquina
@@ -111,5 +169,5 @@
                               ; Si hay alertas de muchas monedas añadir máquina
                               (if (= (get res :alertas-mon-max) nil) alertas-mon-max (concat alertas-mon-max (list actual)))))))
 
-(resultados-generales 3 0 0 '() '() '())
+(resultados-generales 3 0 0 '() '() '() '())
 
