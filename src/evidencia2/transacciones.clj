@@ -9,15 +9,15 @@
   (cond
     ; Si se encuentran los datos del elemento buscado
     (= elemento (get (first inventario) 0))
-     ; Regresa una nueva lista que junta
+    ; Regresa una nueva lista que junta
     (concat
-      ; Los datos de los elementos anteriores
+     ; Los datos de los elementos anteriores
      inv-anterior
-      ; Los datos del elemento buscado aplicando el operador a la cantidad en inventario
+     ; Los datos del elemento buscado aplicando el operador a la cantidad en inventario
      (list [(get (first inventario) 0)
             (operador (get (first inventario) 1) 1)
             (get (first inventario) 2)])
-      ; Los datos de los elementos que seguían
+     ; Los datos de los elementos que seguían
      (rest inventario))
 
     ; Llama recursivamente a la función pasando
@@ -51,7 +51,7 @@
 
 ;; --- BUSCAR PRODUCTO ---
 ;; Función que busca el producto de la transacción
-;; (producto, inv-productos) -> ( '(precio, nuevo inv-productos) ó estado de salida)
+;; (producto, inv-productos, inv-productos que no cambia) -> ('(precio, nuevo inv-productos) ó estado de salida)
 
 (defn buscar-producto [producto inv-productos todos-productos]
   (cond
@@ -124,7 +124,7 @@
 
 
 ;; --- VALIDAR MONEDAS INGRESADAS ---
-;; Función que valida las monedas ingresadas basandonos en un autómata y llama a calcula-cambio o regresa estado de salida
+;; Función que valida las monedas ingresadas basandose en un autómata y llama a calcula-cambio o regresa estado de salida
 ;; (cantidad ingresada, monedas ingresadas, precio, inv-monedas) -> ('(cambio, nuevo-inv-monedas) )
 
 (defn validar-monedas [cant-ingresada m-ingresadas precio inv-monedas]
@@ -150,8 +150,9 @@
 
 
 ;; --- PROCESA TRANSACCIÓN ---
-;; Función que procesa una transacción y devuelve ganancia o imprime errores
-;; (id máquina, transaccion, inv-productos, inv-monedas, resultado de precio, resultado de cambio, bool monedas agregadas) -> (ganancia de transaccion)
+;; Función que procesa una transacción y devuelve ganancia y el resultado para imprimir
+;; (id máquina, transaccion, inv-productos, inv-monedas, resultado de precio, resultado de cambio, bool monedas agregadas)
+;; -> (ganancia de transaccion y lita con datos para imprimir resultado)
 
 (defn procesa-transaccion [id-maquina transaccion inv-productos inv-monedas res-precio res-cambio m-agregadas]
   (cond
@@ -163,14 +164,15 @@
     (procesa-transaccion id-maquina transaccion inv-productos inv-monedas
                           ; Pasando como parametro de res-precio el resultado de buscar-producto
                          (buscar-producto (get transaccion 1)
-                                           ; Se pasa un inventario para iterar sobre él
+                                          ; Se pasa un inventario para iterar sobre él
                                           inv-productos
-                                           ; Se pasa otro inventario para restar la cantidad
+                                          ; Se pasa otro inventario para restar la cantidad
                                           inv-productos)
                          res-cambio m-agregadas)
     ; --- VALIDACIONES ---
     ; Si el res-precio es -1 es porque no se encontró el producto, marca error y regresa ganancia 0
     (= res-precio -1)
+    ; Las salidas son una lista con la ganancia y una sublista con los datos para imprimir el resultado
     (list 0 (list 0 (get transaccion 0) "No se encontró producto"
                 (get transaccion 1) 0 0 (get transaccion 2)))
     ; Si el res-precio es -2 es porque no hay inventario, marca error y regresa ganancia 0
@@ -181,7 +183,7 @@
     ; --- VERIFICAR MONEDAS Y CALCULAR CAMBIO ---
     ; Si no hay res-cambio es porque aún no se han procesado las monedas y el cambio
     (nil? res-cambio)
-     ; Llamar a la función recursivamente
+    ; Llamar a la función recursivamente
     (procesa-transaccion id-maquina transaccion inv-productos inv-monedas res-precio
                           ; Pasando como parametro de res-cambio el resultado de validar-monedas
                          (validar-monedas
@@ -226,14 +228,14 @@
             ; Actualiza el archivo de inventarios de la máquina
             (spit (str "data/" id-maquina "/i.txt") 
                   {:maquina id-maquina :inv-productos (second res-precio) :inv-monedas inv-monedas})
-            ; Imprime venta exitosa
+            ; Regresa ganancia y lista con datos para imprimir venta exitosa
             (list (first res-precio) (list 1 (get transaccion 0) "Venta exitosa"
                   (get transaccion 1) (first res-precio) (apply + (get transaccion 2)) (first res-cambio))))))
 
 
 ;; --- ALERTA INVENTARIO ---
-;; Función que genera lista de elementos en alerta
-;; (tipo de inventario, inventario, <= ó >, + ó -, margen) -> (elementos en alerta)
+;; Función que genera lista de productos o monedas en alerta
+;; (inventario, <= ó >, + ó -, margen) -> (elementos en alerta)
 
 (defn alerta-inventario [inventario operador-1 operador-2 margen]
   (cond
@@ -244,22 +246,21 @@
     ; Añade el elemento a la lista
     (cons (get (first inventario) 0) (alerta-inventario (rest inventario) operador-1 operador-2 margen))
 
-    ; Si no hay alerta
+    ; Si no hay alerta pasa al siguiente elemento
     :else (alerta-inventario (rest inventario) operador-1 operador-2 margen)))
 
 
 ;; --- PROCESAR-MÁQUINA ---
-;; Función que itera las transacciones y llama a la función procesa-transaccion
-;; (transacciones) -> (nil)
-;; (procesa-transaccion (first transacciones) (get inventarios :inv-productos) (get inventarios :inv-monedas) nil nil nil)
+;; Función que itera las transacciones de una máquina y las procesa
+;; (id máquina, transacciones, ganancia total, resultados de transacciones) -> (nil)
 
 (defn procesar-maquina [id-maquina transacciones ganancia-total resultados]
   ; Si ya no hay transacciones
   (if (empty? transacciones)
     
-    ; Abrir los inventarios
+    ; Abrir los inventarios finales para checar alertas
     (let [inventarios (read-string (slurp (str "data/" id-maquina "/i.txt")))]
-      ; Guardar los resultados del procesamiento de máquina en un archivo
+      ; Guardar los resultados del procesamiento de la máquina en un archivo
       (spit (str "data/" id-maquina "/r.txt")
             {:maquina id-maquina :ganancia ganancia-total :resultados resultados
              ; Obtener las alertas de inventario

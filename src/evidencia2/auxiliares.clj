@@ -83,7 +83,7 @@
 ;; (numero de máquina, ganancia, resultados, alertas) -> nil
 
 (defn imprimir-resultados-maquina [n-maquina ganancia resultados alertas-prod-min alertas-mon-min alertas-mon-max]
-  (println "\n\n--------- RESULTADOS MÁQUINA" n-maquina "---------")
+  (println "\n\n--------- RESULTADOS MAQUINA" n-maquina "---------")
   (dorun (map print-resultado resultados))
   (println "Ganancia: " ganancia)
   (println "Productos con poco inventario: " alertas-prod-min)
@@ -93,8 +93,9 @@
 
 ;; --- BUSCAR LUGAR DEL TOP ---
 ;; Función que regresa el nuevo top acomodando la nueva máquina en su lugar
+;; (n-máquina, ganancia, elementos pasados, top-10) -> (nuevo top-10)
+
 (defn buscar-lugar [n-maquina ganancia pasados top-10]
-  (println pasados)
   (if
    ; Si la máquina actual es más grande que el first y second del top-10
    (and (> ganancia (second (first top-10))) (> ganancia (second (second top-10))))
@@ -107,6 +108,7 @@
        (drop 1 (concat pasados (list (first top-10)) (list (second top-10))))
        ; Añadir la máquina actual que es ahora la más grande
        (list (list n-maquina ganancia)))
+      
       ; Pasar a la siguiente iteración
       (buscar-lugar n-maquina ganancia (concat pasados (list (first top-10))) (rest top-10)))
 
@@ -146,17 +148,18 @@
   (println "\n\n\n")
   (println "--- RESULTADOS GENERALES ---")
   (println "\n- Ganancia Total:" ganancia)
-  (println "\n- Top 10 máquinas con más ganancia")
-  (dorun (map (fn [par] (println "  Máquina:" (first par)"| Ganancia:" (second par))) top-10))
-  (println "\n- Ids de Máquinas con Alertas")
-  (println "  Máquinas con pocos productos: " alertas-prod-min)
-  (println "  Máquinas con pocas monedas: " alertas-mon-min)
-  (println "  Máquinas con muchas monedas: " alertas-mon-max))
+  (println "\n- Top 10 maquinas con mas ganancia")
+  (dorun (map (fn [par] (println "  Maquina:" (first par)"| Ganancia:" (second par))) top-10))
+  (println "\n- Ids de Maquinas con Alertas")
+  (println "  Maquinas con pocos productos: " alertas-prod-min)
+  (println "  Maquinas con pocas monedas: " alertas-mon-min)
+  (println "  Maquinas con muchas monedas: " alertas-mon-max)
+  (println "\n\n\n"))
 
 
 ;; --- MOSTRAR RESULTADOS GENERALES ---
 ;; Función que muestra los resultados generales de todas las máquinas procesadas
-;; (numero de maquinas, máquina actual, ganancia total, alertas) -> nil
+;; (numero de maquinas, máquina actual, ganancia total, top-10, alertas) -> (nil)
 
 (defn resultados-generales [n-maquinas actual ganancia top-10 alertas-prod-min alertas-mon-min alertas-mon-max]
   (if (= n-maquinas actual) (imprimir-resultados-generales ganancia alertas-prod-min alertas-mon-min alertas-mon-max top-10)
