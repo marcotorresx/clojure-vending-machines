@@ -1,1 +1,0 @@
-{:maquina 2, :ganancia 30, :resultados ((1 1 "Venta exitosa" G 30 100 (50 10 10)) (0 2 "No hay inventario de producto" G 0 0 (10 10 1 1 1 1 1 1 1 1 1 1)) (0 3 "No hay inventario de producto" G 0 0 (10 10 1 1 1 1 1 1 1 1 1 1))), :alertas-prod-min (G), :alertas-mon-min (2 5 10 20), :alertas-mon-max (1)}

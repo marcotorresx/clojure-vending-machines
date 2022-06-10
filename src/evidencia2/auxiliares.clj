@@ -4,23 +4,23 @@
 ; Definir los productos y monedas con que van a operar las máquinas
 (def productos
   ; Producto Cantidad Precio
-  '([A 10 5]
-    [B 8 9]
-    [C 6 13]
-    [D 6 15]
-    [E 5 18]
-    [F 5 25]
-    [G 5 30]
-    [H 5 44]))
+  '([A 10 9]
+    [B 8 11]
+    [C 6 15]
+    [D 6 17]
+    [E 5 25]
+    [F 5 30]
+    [G 5 42]
+    [H 5 55]))
 
 (def monedas
   ; Valor Cantidad Max
-  '([1 30 40]
+  '([1 25 50]
     [2 10 20]
-    [5 2 20]
-    [10 0 20]
-    [20 0 10]
-    [50 0 10]))
+    [5 10 20]
+    [10 10 20]
+    [20 5 10]
+    [50 5 10]))
 
 
 ;; --- GENERAR TRANSACCIÓN ---
@@ -33,8 +33,7 @@
    ; Obtener producto random
    (nth (map first productos) (rand-int (count productos)))
    ; Obtener monedas random
-   (take (rand-int 6) (repeatedly #(nth (map first monedas) (rand-int (count monedas)))))
-   ])
+   (take (rand-int 6) (repeatedly #(nth (map first monedas) (rand-int (count monedas)))))])
 
 
 ;; --- GENERAR TRANSACCIONES ---
@@ -142,12 +141,25 @@
      (buscar-lugar n-maquina ganancia '() top-10))))
 
 
+;; --- IMPRIMIR RESULTADOS GENERALES ---
+(defn imprimir-resultados-generales [ganancia alertas-prod-min alertas-mon-min alertas-mon-max top-10]
+  (println "\n\n\n")
+  (println "--- RESULTADOS GENERALES ---")
+  (println "\n- Ganancia Total:" ganancia)
+  (println "\n- Top 10 máquinas con más ganancia")
+  (dorun (map (fn [par] (println "  Máquina:" (first par)"| Ganancia:" (second par))) top-10))
+  (println "\n- Ids de Máquinas con Alertas")
+  (println "  Máquinas con pocos productos: " alertas-prod-min)
+  (println "  Máquinas con pocas monedas: " alertas-mon-min)
+  (println "  Máquinas con muchas monedas: " alertas-mon-max))
+
+
 ;; --- MOSTRAR RESULTADOS GENERALES ---
 ;; Función que muestra los resultados generales de todas las máquinas procesadas
 ;; (numero de maquinas, máquina actual, ganancia total, alertas) -> nil
 
 (defn resultados-generales [n-maquinas actual ganancia top-10 alertas-prod-min alertas-mon-min alertas-mon-max]
-  (if (= n-maquinas actual) (list ganancia alertas-prod-min alertas-mon-min alertas-mon-max top-10)
+  (if (= n-maquinas actual) (imprimir-resultados-generales ganancia alertas-prod-min alertas-mon-min alertas-mon-max top-10)
       ; Leer resultados de máquina acutal
       (let [res (read-string (slurp (str "data/" actual "/r.txt")))]
         ; Imprimir resultados de la máquina actual
@@ -168,6 +180,3 @@
                               (if (= (get res :alertas-mon-min) nil) alertas-mon-min (concat alertas-mon-min (list actual)))
                               ; Si hay alertas de muchas monedas añadir máquina
                               (if (= (get res :alertas-mon-max) nil) alertas-mon-max (concat alertas-mon-max (list actual)))))))
-
-(resultados-generales 3 0 0 '() '() '() '())
-

@@ -40,6 +40,10 @@
 (println "alertas-mon-max: " (get resultados :alertas-mon-max))
 
 ;; Leer inventarios
-(def inventarios (read-string (slurp (str "data/" 2 "/i.txt"))))
+(def inventarios (read-string (slurp (str "data/" 32 "/i.txt"))))
 (println "productos: " (get inventarios :inv-productos))
 (println "monedas: " (get inventarios :inv-monedas))
+
+;; Leer transacciones
+(def transacciones2 (read-string (slurp (str "data/" 32 "/t.txt"))))
+(println "transacciones: " (get transacciones2 :transacciones))
