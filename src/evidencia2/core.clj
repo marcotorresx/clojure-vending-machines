@@ -8,8 +8,13 @@
 ;; --- EJECUCIÓN ---
 
 ; 1. Generar los inventarios y transacciones de cada máquina
-(def n-maquinas 100)
-(def n-transacciones 10)
+(println "\n------- SIMULADOR DE MAQUINAS EXPENDEDORAS -------")
+(do (print "\nIngresa cantidad de maquinas: ") 
+    (flush) 
+    (def n-maquinas (Integer/parseInt (read-line))))
+(do (print "Ingresa cantidad de transacciones por maquina: ") 
+    (flush) 
+    (def n-transacciones (Integer/parseInt (read-line))))
 (aux/generar-maquinas n-maquinas n-transacciones 0)
 
 ; 2. Procesar las transacciones de cada máquina
