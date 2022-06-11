@@ -33,5 +33,5 @@
         (partition-all 3 (range n-maquinas)))))
 
 
-; 3. Mostrar los resultados de todas las cajas
+; 3. Mostrar los resultados de todas las máquinas
 (aux/resultados-generales n-maquinas 0 0 '() '() '() '())

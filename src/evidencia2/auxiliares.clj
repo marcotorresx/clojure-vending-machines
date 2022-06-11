@@ -131,16 +131,16 @@
    ; Si todavía no hay 10 elementos dentro
    (< (count top-10) 10)
     ; Agrega la máquina actual en donde va
-    (concat (filter (fn [par] (<= (second par) ganancia)) top-10) 
-            (list (list n-maquina ganancia)) 
-            (filter (fn [par] (> (second par) ganancia)) top-10))
+      (concat (filter (fn [par] (<= (second par) ganancia)) top-10)
+              (list (list n-maquina ganancia))
+              (filter (fn [par] (> (second par) ganancia)) top-10))
 
     ; Si ya hay 10 elementos
-    (if
+      (if
      ; Si la ganancia actual es más chica que la ganancia más pequeña del top regresa el top como estaba
-     (<= ganancia (second (first top-10))) top-10
+       (<= ganancia (second (first top-10))) top-10
      ; Si es más grande significa que debe de entrar en el top y hay que buscar su lugar
-     (buscar-lugar n-maquina ganancia '() top-10))))
+       (buscar-lugar n-maquina ganancia '() top-10))))
 
 
 ;; --- IMPRIMIR RESULTADOS GENERALES ---
