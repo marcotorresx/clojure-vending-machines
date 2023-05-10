@@ -1,9 +1,9 @@
 (ns evidencia2.auxiliares
   (:require [clojure.java.io :refer [make-parents]]))
 
-; Definir los productos y monedas con que van a operar las máquinas
+; Define the products and currencies that the machines will operate with
 (def productos
-  ; Producto Cantidad Precio
+  ; Product Quantity Price
   '([A 10 9]
     [B 8 11]
     [C 6 15]
@@ -14,7 +14,7 @@
     [H 5 55]))
 
 (def monedas
-  ; Valor Cantidad Max
+  ; Value Quantity Max
   '([1 25 50]
     [2 10 20]
     [5 10 20]
@@ -23,163 +23,155 @@
     [50 5 10]))
 
 
-;; --- GENERAR TRANSACCIÓN ---
-;; Función que genera una transacción con datos random
-;; (transacción actual) -> (transacción)
+;; --- GENERATE TRANSACTION ---
+;; Function that generates a transaction with random data
+;; (current transaction) -> (transaction)
 
 (defn generar-transaccion [actual] 
-  [; Id de transacción
+  [; Transaction ID
    actual 
-   ; Obtener producto random
+   ; Get random product
    (nth (map first productos) (rand-int (count productos)))
-   ; Obtener monedas random
+   ; Get random coins
    (take (rand-int 6) (repeatedly #(nth (map first monedas) (rand-int (count monedas)))))])
 
 
-;; --- GENERAR TRANSACCIONES ---
-;; Función que genera n transacciones con valores random
-;; (cantidad de transacciones, máquina actual, transacciones, transacción actual) -> (mapa con transacciones)
+;; --- GENERATE TRANSACTIONS ---
+;; Function that generates n transactions with random values
+;; (number of transactions, current machine, transactions, current transaction) -> (map with transactions)
 
 (defn generar-transacciones [nTransacciones maquina transacciones actual]
-  ; Regresar mapa de transacciones
+  ; Return map of transactions
   (if (= nTransacciones actual) {:maquina maquina :transacciones transacciones}
-      ; Añade transacción y continua iterando
+      ; Add transaction and continue iterating
       (generar-transacciones nTransacciones maquina (concat transacciones (list (generar-transaccion actual))) (inc actual))))
 
 
-;; --- GENERAR MÁQUINAS ---
-;; Función que generar los archivos de las máquinas
-;; (cantidad de máquinas, cantidad de transacciones por máquina, máquina actual) -> nil
+;; --- GENERATE MACHINES ---
+;; Function that generates the files for the machines
+;; (number of machines, number of transactions per machine, current machine) -> nil
 
 (defn generar-maquinas [nMaquinas nTransacciones actual]
   (if (= actual nMaquinas) nil
       (do
-        ; Crear directorios padre
+        ; Create parent directories
         (make-parents (str "data/" actual "/i.txt"))
-        ; Crear archivo de inventarios
+        ; Create inventory file
         (spit (str "data/" actual "/i.txt") {:maquina actual :inv-productos productos :inv-monedas monedas})
-        ; Crear archivo de transacciones
+        ; Create transaction file
         (spit (str "data/" actual "/t.txt") (generar-transacciones nTransacciones actual '() 0))
-        ; Pasar a crear la siguiente máquina
+        ; Move on to create the next machine
         (generar-maquinas nMaquinas nTransacciones (inc actual)))))
 
 
-;; --- PRINT RESULTADO ---
-;; Función que imprime el resultado de una transacción
-;; (resultado de transacción) -> nil
+;; --- PRINT RESULT ---
+;; Function that prints the result of a transaction
+;; (transaction result) -> nil
 
 (defn print-resultado [res]
-  ; Si el estado es 1 la transacción fue exitosa
+  ; If the state is 1, the transaction was successful
   (if (= (nth res 0) 1)
-    (do (printf "%s. OK: %s | Producto: %s | Precio: %s | Ingresado: %s | Cambio: "
+    (do (printf "%s. OK: %s | Product: %s | Price: %s | Entered: %s | Change: "
                 (nth res 1) (nth res 2) (nth res 3) (nth res 4) (nth res 5)) (println (nth res 6)))
-    ; Si el estado fue 0 hubo un error
-    (printf "%s. ERROR: %s | Producto: %s | Se regresa: %s\n"
+    ; If the state was 0, there was an error
+    (printf "%s. ERROR: %s | Product: %s | Change returned: %s\n"
             (nth res 1) (nth res 2) (nth res 3) (nth res 6))))
 
 
-;; --- IMPRIMIR RESULTADOS DE MÁQUINA ---
-;; Función que imprime los resultados de una máquina
-;; (numero de máquina, ganancia, resultados, alertas) -> nil
-
+;; --- PRINT MACHINE RESULTS ---
+;; Function that prints the results of a machine
+;; (machine number, earnings, results, alerts) -> nil
 (defn imprimir-resultados-maquina [n-maquina ganancia resultados alertas-prod-min alertas-mon-min alertas-mon-max]
-  (println "\n\n--------- RESULTADOS MAQUINA" n-maquina "---------")
+  (println "\n\n--------- MACHINE RESULTS" n-maquina "---------")
   (dorun (map print-resultado resultados))
-  (println "Ganancia: " ganancia)
-  (println "Productos con poco inventario: " alertas-prod-min)
-  (println "Monedas con poco inventario: " alertas-mon-min)
-  (println "Monedas con mucho inventario: " alertas-mon-max))
+  (println "Earnings: " ganancia)
+  (println "Products with low inventory: " alertas-prod-min)
+  (println "Coins with low inventory: " alertas-mon-min)
+  (println "Coins with high inventory: " alertas-mon-max))
 
 
-;; --- BUSCAR LUGAR DEL TOP ---
-;; Función que regresa el nuevo top acomodando la nueva máquina en su lugar
-;; (n-máquina, ganancia, elementos pasados, top-10) -> (nuevo top-10)
-
+;; --- FIND TOP POSITION ---
+;; Function that returns the new top by arranging the new machine in its position
+;; (machine number, earnings, past elements, top-10) -> (new top-10)
 (defn buscar-lugar [n-maquina ganancia pasados top-10]
   (if
-   ; Si la máquina actual es más grande que el first y second del top-10
+   ; If the current machine is larger than the first and second of the top-10
    (and (> ganancia (second (first top-10))) (> ganancia (second (second top-10))))
     (if
-     ; Y si solo habían dos elementos es porque la actual es la máquina más grande y va al final 
+     ; And if there were only two elements, it is because the current one is the largest machine and goes to the end 
      (= (count top-10) 2)
-      ; Agregar máquina al final del top
+      ; Add machine to the end of the top
       (concat
-       ; Quitar el primer y segundo elemento a los pasados y quitar el primero de pasados porque es el más pequeño
+       ; Remove the first and second element from the past elements and remove the first from pasados because it is the smallest
        (drop 1 (concat pasados (list (first top-10)) (list (second top-10))))
-       ; Añadir la máquina actual que es ahora la más grande
+       ; Add the current machine that is now the largest
        (list (list n-maquina ganancia)))
       
-      ; Pasar a la siguiente iteración
+      ; Move to the next iteration
       (buscar-lugar n-maquina ganancia (concat pasados (list (first top-10))) (rest top-10)))
-
-   ; Si no es porque es más grande que el primero pero más chico que el segundo y este es su lugar
+   ; If not, it is because it is larger than the first but smaller than the second and this is its place
    (concat
-    ; Quitar el primer elemento del top anterior porque es el más pequeño
+    ; Remove the first element from the previous top because it is the smallest
     (drop 1 (concat pasados (list (first top-10))))
-     ; Añadir la máquina actual
+     ; Add the current machine
     (list (list n-maquina ganancia))
-     ; El resto del top
+     ; The rest of the top
     (rest top-10))))
 
 
-;; --- CHECAR TOP 10 ---
-;; Función que checa si una máquina entra en el top 10 de máquinas con mayor ganancia
-;; (número de máquina, ganancia de la máquina, actual top 10)
-
+;; --- CHECK TOP 10 ---
+;; Function that checks if a machine enters the top 10 of machines with the highest profit
+;; (machine number, machine profit, current top 10)
 (defn checar-top [n-maquina ganancia top-10]
   (if
-   ; Si todavía no hay 10 elementos dentro
+   ; If there are less than 10 elements
    (< (count top-10) 10)
-    ; Agrega la máquina actual en donde va
+    ; Add the current machine where it goes
       (concat (filter (fn [par] (<= (second par) ganancia)) top-10)
               (list (list n-maquina ganancia))
               (filter (fn [par] (> (second par) ganancia)) top-10))
-
-    ; Si ya hay 10 elementos
+    ; If there are already 10 elements
       (if
-     ; Si la ganancia actual es más chica que la ganancia más pequeña del top regresa el top como estaba
+     ; If the current profit is smaller than the smallest profit in the top, return the top as it was
        (<= ganancia (second (first top-10))) top-10
-     ; Si es más grande significa que debe de entrar en el top y hay que buscar su lugar
+     ; If it's bigger, it should enter the top and we need to find its place
        (buscar-lugar n-maquina ganancia '() top-10))))
 
-
-;; --- IMPRIMIR RESULTADOS GENERALES ---
+;; --- PRINT GENERAL RESULTS ---
 (defn imprimir-resultados-generales [ganancia alertas-prod-min alertas-mon-min alertas-mon-max top-10]
   (println "\n\n\n")
-  (println "--- RESULTADOS GENERALES ---")
-  (println "\n- Ganancia Total:" ganancia)
-  (println "\n- Top 10 maquinas con mas ganancia")
-  (dorun (map (fn [par] (println "  Maquina:" (first par)"| Ganancia:" (second par))) top-10))
-  (println "\n- Ids de Maquinas con Alertas")
-  (println "  Maquinas con pocos productos: " alertas-prod-min)
-  (println "  Maquinas con pocas monedas: " alertas-mon-min)
-  (println "  Maquinas con muchas monedas: " alertas-mon-max)
+  (println "--- GENERAL RESULTS ---")
+  (println "\n- Total Profit:" ganancia)
+  (println "\n- Top 10 machines with highest profit")
+  (dorun (map (fn [par] (println "  Machine:" (first par)"| Profit:" (second par))) top-10))
+  (println "\n- Machine IDs with alerts")
+  (println "  Machines with low products: " alertas-prod-min)
+  (println "  Machines with few coins: " alertas-mon-min)
+  (println "  Machines with many coins: " alertas-mon-max)
   (println "\n\n\n"))
 
-
-;; --- MOSTRAR RESULTADOS GENERALES ---
-;; Función que muestra los resultados generales de todas las máquinas procesadas
-;; (numero de maquinas, máquina actual, ganancia total, top-10, alertas) -> (nil)
-
+;; --- SHOW GENERAL RESULTS ---
+;; Function that shows the general results of all the processed machines
+;; (number of machines, current machine, total profit, top-10, alerts) -> (nil)
 (defn resultados-generales [n-maquinas actual ganancia top-10 alertas-prod-min alertas-mon-min alertas-mon-max]
   (if (= n-maquinas actual) (imprimir-resultados-generales ganancia alertas-prod-min alertas-mon-min alertas-mon-max top-10)
-      ; Leer resultados de máquina acutal
+      ; Read results from current machine
       (let [res (read-string (slurp (str "data/" actual "/r.txt")))]
-        ; Imprimir resultados de la máquina actual
+        ; Print results from current machine
         (imprimir-resultados-maquina actual (get res :ganancia) (get res :resultados)
                                      (get res :alertas-prod-min) (get res :alertas-mon-min)
                                      (get res :alertas-mon-max))
-        ; Pasar a la siguiente máquina
+        ; Move to the next machine
         (resultados-generales n-maquinas
-                              ; Pasar a siguiente máquina
+                              ; Move to next machine
                               (inc actual)
-                              ; Sumar la ganancia actual
+                              ; Add current profit
                               (+ ganancia (get res :ganancia))
-                              ; Checar si es top 10
+                              ; Check if it's in the top 10
                               (checar-top actual (get res :ganancia) top-10)
-                              ; Si hay alertas de poco producto añadir máquina
+                              ; If there are alerts for low product, add the machine
                               (if (= (get res :alertas-prod-min) nil) alertas-prod-min (concat alertas-prod-min (list actual)))
-                              ; Si hay alertas de pocas monedas añadir máquina
+                              ; If there are alerts for few coins, add the machine
                               (if (= (get res :alertas-mon-min) nil) alertas-mon-min (concat alertas-mon-min (list actual)))
-                              ; Si hay alertas de muchas monedas añadir máquina
+                              ; If there are alerts for many coins, add the machine
                               (if (= (get res :alertas-mon-max) nil) alertas-mon-max (concat alertas-mon-max (list actual)))))))
