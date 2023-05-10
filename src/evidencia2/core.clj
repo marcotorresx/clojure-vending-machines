@@ -5,33 +5,33 @@
 (defn -main [])
 
 
-;; --- EJECUCIÓN ---
+;; --- EXECUTION ---
 
-; 1. Generar los inventarios y transacciones de cada máquina
-(println "\n------- SIMULADOR DE MAQUINAS EXPENDEDORAS -------")
-(do (print "\nIngresa cantidad de maquinas: ") 
+; 1. Generate inventories and transactions for each machine
+(println "\n------- VENDING MACHINE SIMULATOR -------")
+(do (print "\nEnter the number of machines: ") 
     (flush) 
     (def n-maquinas (Integer/parseInt (read-line))))
-(do (print "Ingresa cantidad de transacciones por maquina: ") 
+(do (print "Enter the number of transactions per machine: ") 
     (flush) 
     (def n-transacciones (Integer/parseInt (read-line))))
 (aux/generar-maquinas n-maquinas n-transacciones 0)
 
-; 2. Procesar las transacciones de cada máquina
+; 2. Process the transactions for each machine
 (time (dorun (pmap 
-        ; Función que recibe una sublista de máquinas
+        ; Function that receives a sublist of machines
         (fn [sublista] (dorun (map 
-                               ; A cada máquina de la sublista pasarla por una función
+                               ; Apply a function to each machine in the sublist
                                (fn [n-maquina] 
-                                 ; Procesar la máquina actual
+                                  ; Process the current machine
                                  (trans/procesar-maquina 
                                   n-maquina 
                                   (get (read-string (slurp (str "data/" n-maquina "/t.txt"))) :transacciones) 
                                   0 '())) 
                                    sublista)))
-        ; Lista de máquinas particionada
+        ; Partitioned list of machines
         (partition-all 3 (range n-maquinas)))))
 
 
-; 3. Mostrar los resultados de todas las máquinas
+; 3. Display the results for all machines
 (aux/resultados-generales n-maquinas 0 0 '() '() '() '())
