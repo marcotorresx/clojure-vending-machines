@@ -1,7 +1,7 @@
-(ns evidencia2.core
+(ns main.core
   (:gen-class)
-  (:require [evidencia2.auxiliares :as aux]
-            [evidencia2.transacciones :as trans]))
+  (:require [main.auxiliares :as aux]
+            [main.transacciones :as trans]))
 (defn -main [])
 
 
