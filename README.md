@@ -1,5 +1,7 @@
 # Simulation of vending machines using functional programming and parallelization
 
+![image](https://github.com/marcotorresx/clojure-vending-machines/assets/90577455/7937e30c-b6cf-401a-ae89-67cd59491f14)
+
 ## Introduction
 
 This project entails simulating vending machines to conduct sales simultaneously, followed by an analysis of the sales and final states of the machines. What distinguishes this project is that it utilizes functional programming and parallelization for its development.
