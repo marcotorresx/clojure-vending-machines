@@ -16,7 +16,7 @@ The program was developed in Clojure, a functional programming language that als
 
 - Upon completion of these inputs, the program generates the specified number of machines, each with randomly allocated product quantities and prices. A parallelization process is then executed to simulate the machines' simultaneous sales.
 
-<img width="695" alt="image" src="https://github.com/marcotorresx/clojure-vending-machines/assets/90577455/c086db7e-1735-4cd1-856c-2b8291f85aec">
+<img width="618" alt="image" src="https://github.com/marcotorresx/clojure-vending-machines/assets/90577455/645fb2b5-01d1-47d9-b965-eb43429123e8">
 
 - Finally, reports on sales and states of the machines are obtained.
 
