@@ -10,11 +10,17 @@ The program was developed in Clojure, a functional programming language that als
 
 ## How it works
 
-The program initiates by prompting the user to enter the number of vending machines they intend to simulate, as well as the number of transactions or sales to be conducted by each machine.
+- The program initiates by prompting the user to enter the number of vending machines they intend to simulate, as well as the number of transactions or sales to be conducted by each machine.
 
-Upon completion of these inputs, the program generates the specified number of machines, each with randomly allocated product quantities and prices. A parallelization process is then executed to simulate the machines' simultaneous sales.
+<img width="387" alt="image" src="https://github.com/marcotorresx/clojure-vending-machines/assets/90577455/2678d860-592f-461a-856b-88de1a1ebc5d">
 
-Finally, reports on sales and states of the machines are obtained.
+- Upon completion of these inputs, the program generates the specified number of machines, each with randomly allocated product quantities and prices. A parallelization process is then executed to simulate the machines' simultaneous sales.
+
+<img width="695" alt="image" src="https://github.com/marcotorresx/clojure-vending-machines/assets/90577455/c086db7e-1735-4cd1-856c-2b8291f85aec">
+
+- Finally, reports on sales and states of the machines are obtained.
+
+<img width="563" alt="image" src="https://github.com/marcotorresx/clojure-vending-machines/assets/90577455/cc75e5fa-8a97-413a-bdb8-0aeab11f6916">
 
 ## Installation
 
