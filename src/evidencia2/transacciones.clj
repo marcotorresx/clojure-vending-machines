@@ -1,282 +1,281 @@
 (ns evidencia2.transacciones)
 
 
-;; --- MODIFICAR INVENTARIO  ---
-;; Función que modifica la cantidad de inventario dependiendo del operador
-;; (inventario, inv-anterior, elemento, operador) -> (nuevo inventario)
+;; --- MODIFY INVENTORY ---
+;; Function that modifies the inventory quantity depending on the operator
+;; (inventory, previous-inv, element, operator) -> (new inventory)
 
 (defn modificar-inventario [inventario inv-anterior elemento operador]
   (cond
-    ; Si se encuentran los datos del elemento buscado
+    ; If the data of the searched element is found
     (= elemento (get (first inventario) 0))
-    ; Regresa una nueva lista que junta
+    ; Return a new list that combines
     (concat
-     ; Los datos de los elementos anteriores
+     ; The data of previous elements
      inv-anterior
-     ; Los datos del elemento buscado aplicando el operador a la cantidad en inventario
+     ; The data of the searched element applying the operator to the inventory quantity
      (list [(get (first inventario) 0)
             (operador (get (first inventario) 1) 1)
             (get (first inventario) 2)])
-     ; Los datos de los elementos que seguían
+     ; The data of the remaining elements
      (rest inventario))
 
-    ; Llama recursivamente a la función pasando
+    ; Recursively call the function passing
     :else (modificar-inventario
-           ; El resto de los elementos
+           ; The remaining elements
            (rest inventario)
-           ; Añande los datos actuales a la lista de datos anteriores
+           ; Append the current data to the list of previous data
            (concat inv-anterior (list (first inventario)))
            elemento operador)))
 
 
-;;  --- MODIFICAR-INVENTARIO? ---
-;; Función que regresa si es válida la modificación del inventario de una moneda dependiendo del operador
-;; (inv-monedas, moneda, operador) -> (1 o estado de salida)
+;;  --- MODIFY-INVENTORY? ---
+;; Function that returns whether the modification of the coin inventory is valid depending on the operator
+;; (coin-inv, coin, operator) -> (1 or exit status)
 
 (defn modificar-inventario? [inv-monedas moneda operador]
   (cond
-    ; Si se encuentra la moneda
+    ; If the coin is found
     (= moneda (get (first inv-monedas) 0))
     (cond
-      ; Si el operador es - y la moneda tiene de inventario 0, regresa estado de salida -1
+      ; If the operator is - and the coin has 0 inventory, return exit status -1-1
       (and (= operador -) (<= (get (first inv-monedas) 1) 0)) -1
-      ; Si el operador es + y la cantidad es igual a la cantidad máxima, regresa estado de salida -2
+      ; If the operator is + and the quantity is equal to the maximum quantity, return exit status -2
       (and (= operador +) (>= (get (first inv-monedas) 1) (get (first inv-monedas) 2))) -2
-      ; Si es válida la modificación, regresa 1
+      ; If the modification is valid, return 1
       :else 1)
 
-    ; Seguir buscando
+    ; Continue searching
     :else (modificar-inventario? (rest inv-monedas) moneda operador)))
 
 
-;; --- BUSCAR PRODUCTO ---
-;; Función que busca el producto de la transacción
-;; (producto, inv-productos, inv-productos que no cambia) -> ('(precio, nuevo inv-productos) ó estado de salida)
+;; --- SEARCH PRODUCT ---
+;; Function that searches for the transaction product
+;; (product, inventory-products, unchanged-inventory-products) -> ('(price, new inventory-products) or exit status)
 
 (defn buscar-producto [producto inv-productos todos-productos]
   (cond
-    ; Si no se encontró regresa estado de salida -1
+    ; If the product is not found, return exit status -1
     (empty? inv-productos) -1
-    ; Si se encuentra el producto
+    ; If the product is found
     (= producto (get (first inv-productos) 0))
-    ; Checar que haya en inventario
+    ; Check if it's in inventory
     (cond
-      ; Si no hay en inventario regresa estado de salida -2
+      ; If it's out of stock, return exit status -2
       (<= (get (first inv-productos) 1) 0) -2
 
-      ; Si hay en inventario regresa lista con el precio
+      ; If it's in stock, return a list with the price
       :else (list (get (first inv-productos) 2)
-                  ; Y con el nuevo inv-productos
+                  ; And with the new inventory
                   (modificar-inventario todos-productos '() producto -)))
 
-    ; Seguir buscando
+    ; Keep searching
     :else (buscar-producto producto (rest inv-productos) todos-productos)))
 
 
-;; --- AGREGAR MONEDAS ---
-;; Función que regresa el nuevo inventario de monedas con las monedas agregadas o estado de salida
-;; (inv-monedas, monedas ingresadas) -> (nuevo inv-monedas o estado de salida)
+;; --- ADD COINS ---
+;; Function that returns the new coin inventory with added coins or exit status
+;; (coin-inventory, inserted-coins) -> (new coin-inventory or exit status)
 
 (defn agregar-monedas [inv-monedas monedas]
   (cond
-    ; Si ya no hay monedas que agregar regresa el nuevo inventario
+    ; If there are no more coins to add, return the new inventory
     (empty? monedas) inv-monedas
-    ; Si no se puede agregar moneda por inventario lleno, regresa estado de salida -1
+    ; If the coin can't be added because the inventory is full, return exit status -1
     (< (modificar-inventario? inv-monedas (first monedas) +) 0) -1
 
-    ; Llama recursivamente a la función
+    ; Call the function recursively
     :else (agregar-monedas
-           ; Pasando el nuevo inventario con la cantidad de la moneda incrementada
+           ; Passing the new inventory with the incremented coin count
            (modificar-inventario inv-monedas '() (first monedas) +)
-           ; Analizar siguiente moneda
+           ; Analyze the next coin
            (rest monedas))))
 
 
-;; --- CALCULA CAMBIO ---
-;; Función que calcula el cambio de la transacción y genera el nuevo inventario de monedas
-;; (cantidad cambio, monedas de cambio, inv-monedas, valores) -> ( '(cambio, nuevo inv-monedas) )
+;; --- CALCULATE CHANGE ---
+;; Function that calculates the transaction change and generates the new coin inventory
+;; (change-amount, change-coins, coin-inventory, values) -> ( '(change, new coin-inventory) )
 
 (defn calcula-cambio [cant-cambio m-cambio inv-monedas valores]
   (cond
-    ; Si la cantidad de cambio es 0, regresa una lista con las monedas de cambio y el nuevo inventario
+    ; If the change amount is 0, return a list with the change coins and the new inventory
     (<= cant-cambio 0) (list m-cambio inv-monedas)
-    ; Si se han intentado todos los valores no hay cambio suficiente, regresa estado de salida -3
+    ; If all the values have been tried, there is not enough change, return exit status -3
     (empty? valores) -3
 
     :else
     (cond
-       ; Si el valor actual es más chico que la cantidad de cambio y su inventario se puede restar 1
+       ; If the current value is smaller than the change amount and its inventory can be decreased by 1
       (and (<= (first valores) cant-cambio) (> (modificar-inventario? inv-monedas (first valores) -) 0))
 
-       ; Llama recursivamente a la función
+       ; Call the function recursively
       (calcula-cambio
-         ; La nueva cantidad de cambio es la resta entre la cantidad actual y el valor actual
+         ; The new change amount is the subtraction between the current amount and the current value
        (- cant-cambio (first valores))
-         ; Se agrega la moneda actual a las monedas de cambio
+         ; The current coin is added to the change coins
        (concat m-cambio (list (first valores)))
-         ; Se genera nuevo inventario restando en 1 la cantidad
+         ; The new inventory is generated by subtracting 1 from the count
        (modificar-inventario inv-monedas '() (first valores) -)
-         ; Se mantienen los valores para volver a checar el valor actual
+         ; The values are kept to check the current value
        valores)
 
-       ; Si el valor no puede ser cambio intenta con el siguiente valor y sin cambiar los parámetros
+       ; If the current value is greater than the change amount or its inventory cannot be decreased by 1
       :else (calcula-cambio cant-cambio m-cambio inv-monedas (rest valores)))))
 
 
-;; --- VALIDAR MONEDAS INGRESADAS ---
-;; Función que valida las monedas ingresadas basandose en un autómata y llama a calcula-cambio o regresa estado de salida
-;; (cantidad ingresada, monedas ingresadas, precio, inv-monedas) -> ('(cambio, nuevo-inv-monedas) )
+;; --- VALIDATE COINS ---
+;; Function that validates the entered coins based on a finite automaton and calls 'calcula-cambio' or returns output state
+;; (entered amount, entered coins, price, coins inventory) -> ('(change, new-coins-inv))
 
 (defn validar-monedas [cant-ingresada m-ingresadas precio inv-monedas]
   (cond
-    ; Si se acabaron las monedas
+    ; If there are no more coins
     (empty? m-ingresadas)
     (if
-     ; Si el estado final no es estado aceptor (no es mayor que el precio) regresa estado de salida -1
+     ; If the final state is not an accepting state (not greater than the price), return output state -1
      (< cant-ingresada precio) -1
 
-    ; Si esta bien, llama a calcula-cambio y regresa el cambio y nuevo inventario o estados de salida
+    ; If it is correct, call 'calcula-cambio' and return the change and new inventory or output states
      (calcula-cambio
-      ; La cantidad de cambio es la resta entre el dinero ingresado y el precio
+      ; The amount of change is the difference between the entered money and the price
       (- cant-ingresada precio) '() inv-monedas
-      ; Pasar lista de valores de monedas en orden decreciente
+      ; Pass a list of coin values in decreasing order
       (reverse (map first inv-monedas))))
 
-    ; Iterar los valores y verificar que la moneda sea válida o regresar estado de salida -2
+    ; Iterate over the values and check if the coin is valid or return output state -2
     (<= (apply + (map (fn [valor] (if (= valor (first m-ingresadas)) 1 0)) (map first inv-monedas))) 0) -2
 
-    ; Llamar recursivamente a la función con la suma de la cantidad con la moneda
+    ; Recursively call function with sum of amount with currency
     :else (validar-monedas (+ cant-ingresada (first m-ingresadas)) (rest m-ingresadas) precio inv-monedas)))
 
 
-;; --- PROCESA TRANSACCIÓN ---
-;; Función que procesa una transacción y devuelve ganancia y el resultado para imprimir
-;; (id máquina, transaccion, inv-productos, inv-monedas, resultado de precio, resultado de cambio, bool monedas agregadas)
-;; -> (ganancia de transaccion y lita con datos para imprimir resultado)
-
+;; --- PROCESS TRANSACTION ---
+;; Function that processes a transaction and returns the profit and the result to print
+;; (machine id, transaction, product inventory, coin inventory, price result, change result, bool added coins)
+;; -> (transaction profit and list with data to print result)
 (defn procesa-transaccion [id-maquina transaccion inv-productos inv-monedas res-precio res-cambio m-agregadas]
   (cond
 
-    ; --- VERIFICAR PRECIO Y PRODUCTO ---
-    ; Si no hay res-precio es porque aún no se ha buscado el producto
+    ; --- VERIFY PRICE AND PRODUCT ---
+    ; If there is no res-precio, it means the product has not been searched yet
     (nil? res-precio)
-     ; Llamar a la función reecursivamente
+    ; Call the function recursively
     (procesa-transaccion id-maquina transaccion inv-productos inv-monedas
-                          ; Pasando como parametro de res-precio el resultado de buscar-producto
+                         ; Passing as a parameter for res-precio the result of buscar-producto
                          (buscar-producto (get transaccion 1)
-                                          ; Se pasa un inventario para iterar sobre él
+                                          ; An inventory is passed to iterate over
                                           inv-productos
-                                          ; Se pasa otro inventario para restar la cantidad
+                                          ; Another inventory is passed to subtract the quantity
                                           inv-productos)
                          res-cambio m-agregadas)
-    ; --- VALIDACIONES ---
-    ; Si el res-precio es -1 es porque no se encontró el producto, marca error y regresa ganancia 0
+    ; --- VALIDATIONS ---
+    ; If res-precio is -1, it means the product was not found. Mark error and return profit 0
     (= res-precio -1)
-    ; Las salidas son una lista con la ganancia y una sublista con los datos para imprimir el resultado
-    (list 0 (list 0 (get transaccion 0) "No se encontró producto"
+    ; The outputs are a list with the profit and a sublist with the data to print the result
+    (list 0 (list 0 (get transaccion 0) "Product not found"
                 (get transaccion 1) 0 0 (get transaccion 2)))
-    ; Si el res-precio es -2 es porque no hay inventario, marca error y regresa ganancia 0
+    ; If res-precio is -2, it means there is no inventory. Mark error and return profit 0
     (= res-precio -2)
-    (list 0 (list 0 (get transaccion 0) "No hay inventario de producto"
+    (list 0 (list 0 (get transaccion 0) "Product inventory is empty"
                 (get transaccion 1) 0 0 (get transaccion 2)))
 
-    ; --- VERIFICAR MONEDAS Y CALCULAR CAMBIO ---
-    ; Si no hay res-cambio es porque aún no se han procesado las monedas y el cambio
+    ; --- VERIFY COINS AND CALCULATE CHANGE ---
+    ; If there is no res-cambio, it means the coins and change have not been processed yet
     (nil? res-cambio)
-    ; Llamar a la función recursivamente
+    ; Call the function recursively
     (procesa-transaccion id-maquina transaccion inv-productos inv-monedas res-precio
-                          ; Pasando como parametro de res-cambio el resultado de validar-monedas
+                         ; Passing as a parameter for res-cambio the result of validar-monedas
                          (validar-monedas
                           0
-                          ; Monedas ingresadas
+                          ; Coins inserted
                           (get transaccion 2)
-                          ; Pasar el precio de producto
+                          ; Pass the product price
                           (first res-precio) inv-monedas)
                          m-agregadas)
-    ; --- VALIDACIONES ---
-    ; Si el res-cambio es -1 es porque no se alcanzó el precio del producto, regresa ganancia 0
+    ; --- VALIDATIONS ---
+    ; If res-cambio is -1, it means the product price was not reached, return profit 0
     (= res-cambio -1)
-    (list 0 (list 0 (get transaccion 0) "Dinero no suficiente"
+    (list 0 (list 0 (get transaccion 0) "Insufficient money"
               (get transaccion 1) 0 0 (get transaccion 2)))
-    ; Si el res-cambio es -1 es porque se ingresó una moneda inválida, regresa ganancia 0
+    ; If res-cambio is -2, it means an invalid coin was inserted, return profit 0
     (= res-cambio -2)
-    (list 0 (list 0 (get transaccion 0) "Se ingresó una moneda no válida"
+    (list 0 (list 0 (get transaccion 0) "Invalid coin inserted"
               (get transaccion 1) 0 0 (get transaccion 2)))
-    ; Si el res-cambio es -3 es porque no hubo cambio suficiente, regresa ganancia 0
+    ; If res-cambio is -3, it means there was not enough change, return profit 0
     (= res-cambio -3)
-    (list 0 (list 0 (get transaccion 0) "No es posible entregar cambio"
+    (list 0 (list 0 (get transaccion 0) "Cannot deliver change"
               (get transaccion 1) 0 0 (get transaccion 2)))
 
 
-    ; --- AGREGAR MONEDAS INGRESADAS A INVENTARIO ---
-    ; Si no hay m-agregadas es porque aún no se han agregado las monedas
+    ; --- ADD INCOMING COINS TO INVENTORY ---
+    ; If there are no added coins, it means that the coins have not yet been added
     (nil? m-agregadas)
-     ; Llamar a la función recursivamente
+      ; Call the function recursively
     (procesa-transaccion id-maquina transaccion inv-productos
-                          ; Genera nuevo inventario usando el inventario resultado del cambio
-                         (agregar-monedas (second res-cambio) (get transaccion 2))
-                          ; Cambiar monedas agregadas a 1 para indicar operación realizada
-                         res-precio res-cambio 1)
-    ; --- VALIDACIONES ---
-    ; Si el inv-monedas es -1 es porque no hubo espacio suficiente, regresa ganancia 0
+                          ; Generate new inventory using the inventory result of the change
+                        (agregar-monedas (second res-cambio) (get transaccion 2))
+                          ; Change added coins to 1 to indicate operation performed
+                        res-precio res-cambio 1)
+    ; --- VALIDATIONS ---
+    ; If inv-monedas is -1, there was not enough space, return profit 0
     (= inv-monedas -1)
     (list 0 (list 0 (get transaccion 0) "No hay suficiente espacio en inventario"
-                               (get transaccion 1) 0 0 (get transaccion 2)))
-    
-    ; Si todo es correcto
+                              (get transaccion 1) 0 0 (get transaccion 2)))
+
+    ; If everything is correct
     :else (do
-            ; Actualiza el archivo de inventarios de la máquina
+            ; Update the inventory file of the machine
             (spit (str "data/" id-maquina "/i.txt") 
                   {:maquina id-maquina :inv-productos (second res-precio) :inv-monedas inv-monedas})
-            ; Regresa ganancia y lista con datos para imprimir venta exitosa
+            ; Return profit and list with data for successful sale printing
             (list (first res-precio) (list 1 (get transaccion 0) "Venta exitosa"
                   (get transaccion 1) (first res-precio) (apply + (get transaccion 2)) (first res-cambio))))))
 
 
-;; --- ALERTA INVENTARIO ---
-;; Función que genera lista de productos o monedas en alerta
-;; (inventario, <= ó >, + ó -, margen) -> (elementos en alerta)
+;; --- INVENTORY ALERT ---
+;; Function that generates list of products or coins in alert
+;; (inventory, <= or >, + or -, margin) -> (elements in alert)
 
 (defn alerta-inventario [inventario operador-1 operador-2 margen]
   (cond
-    ; Si ya se recorrieron todos los elementos regresa lista vacía
+    ; If all elements have been processed, return empty list
     (empty? inventario) nil
-    ; Si hay alerta
+    ; If there is an alert
     (operador-1 (get (first inventario) 1) (operador-2 (if (= operador-1 <=) 0 (get (first inventario) 2)) margen))
-    ; Añade el elemento a la lista
+    ; Add element to the list
     (cons (get (first inventario) 0) (alerta-inventario (rest inventario) operador-1 operador-2 margen))
 
-    ; Si no hay alerta pasa al siguiente elemento
+    ; If there is no alert, move to the next element
     :else (alerta-inventario (rest inventario) operador-1 operador-2 margen)))
 
 
-;; --- PROCESAR-MÁQUINA ---
-;; Función que itera las transacciones de una máquina y las procesa
-;; (id máquina, transacciones, ganancia total, resultados de transacciones) -> (nil)
-
+;; --- PROCESS-MACHINE ---
+;; Function that iterates through the transactions of a machine and processes them
+;; (machine ID, transactions, total earnings, transaction results) -> (nil)
+  
 (defn procesar-maquina [id-maquina transacciones ganancia-total resultados]
-  ; Si ya no hay transacciones
+  ; If there are no more transactions left
   (if (empty? transacciones)
-    
-    ; Abrir los inventarios finales para checar alertas
+
+    ; Open the final inventories to check alerts
     (let [inventarios (read-string (slurp (str "data/" id-maquina "/i.txt")))]
-      ; Guardar los resultados del procesamiento de la máquina en un archivo
+      ; Save the results of processing the machine in a file
       (spit (str "data/" id-maquina "/r.txt")
             {:maquina id-maquina :ganancia ganancia-total :resultados resultados
-             ; Obtener las alertas de inventario
+             ; Obtain inventory alerts
              :alertas-prod-min (alerta-inventario (get inventarios :inv-productos) <= + 3)
              :alertas-mon-min (alerta-inventario (get inventarios :inv-monedas) <= + 2)
              :alertas-mon-max (alerta-inventario (get inventarios :inv-monedas) > - 2)}))
-    
-    ; Obtener los inventarios de la máquina actualizados
+
+    ; Get updated inventories for the machine
     (let [inventarios (read-string (slurp (str "data/" id-maquina "/i.txt")))]
-      ; Procesar la transacción y obtener el resultado que es la ganancia y el string resultado
+      ; Process the transaction and get the result which is the earnings and the result string
       (let [resultado (procesa-transaccion id-maquina (first transacciones)
                                            (get inventarios :inv-productos) (get inventarios :inv-monedas) nil nil nil)]
-        
-        ; Pasar a la siguiente transacción
+
+        ; Move on to the next transaction
         (procesar-maquina id-maquina (rest transacciones)
-                              ; Sumando la ganancia de esta transacción
+                              ; Adding the earnings of this transaction
                               (+ ganancia-total (first resultado))
-                              ; Agregando el resultado de esta transacción
+                              ; Adding the result of this transaction
                               (concat resultados (list (second resultado))))))))
