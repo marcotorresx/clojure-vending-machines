@@ -228,7 +228,7 @@
             (spit (str "data/" id-maquina "/i.txt") 
                   {:maquina id-maquina :inv-productos (second res-precio) :inv-monedas inv-monedas})
             ; Return profit and list with data for successful sale printing
-            (list (first res-precio) (list 1 (get transaccion 0) "Venta exitosa"
+            (list (first res-precio) (list 1 (get transaccion 0) "Successful sale"
                   (get transaccion 1) (first res-precio) (apply + (get transaccion 2)) (first res-cambio))))))
 
 
