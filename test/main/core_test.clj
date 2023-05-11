@@ -1,6 +1,6 @@
-(ns evidencia2.core-test
+(ns main.core-test
   (:require [clojure.test :refer :all]
-            [evidencia2.core :refer :all]))
+            [main.core :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."

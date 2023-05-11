@@ -1,4 +1,4 @@
-(ns evidencia2.auxiliares
+(ns main.auxiliares
   (:require [clojure.java.io :refer [make-parents]]))
 
 ; Define the products and currencies that the machines will operate with
